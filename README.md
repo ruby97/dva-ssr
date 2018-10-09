@@ -132,3 +132,264 @@ res.send(`
 `);
 ```
 
+##### 如何支持Dva
+
+之前使用dva的Code Splitting功能时，用的是 dva/dynamic。示例代码如下：
+
+```javascript
+import dynamic from 'dva/dynamic';
+
+const UserPageComponent = dynamic({
+  app,
+  models: () => [
+    import('./models/users'),
+  ],
+  component: () => import('./routes/UserPage'),
+});
+
+```
+
+它的问题是不支持SSR。解决方法是使用 react-loadable 代替 dva/dynamic。为了不影响dva的功能，
+我们需要了解 dva/dynamic 除了实现了加载组件之外还实现了哪些功能。
+
+通过查阅dva源码，发现 dva/dynamic 额外实现的功能比较纯粹，就是 register model
+
+```javascript
+// packages/dva/src/dynamic.js
+
+const cached = {};
+
+function registerModel(app, model) {
+  model = model.default || model;
+  if (!cached[model.namespace]) {
+    app.model(model);
+    cached[model.namespace] = 1;
+  }
+}
+
+// ..... 省略部分代码
+
+export default function dynamic(config) {
+  const { app, models: resolveModels, component: resolveComponent } = config;
+  return asyncComponent({
+    resolve: config.resolve || function () {
+      const models = typeof resolveModels === 'function' ? resolveModels() : [];
+      const component = resolveComponent();
+      return new Promise((resolve) => {
+        Promise.all([...models, component]).then((ret) => {
+          if (!models || !models.length) {
+            return resolve(ret[0]);
+          } else {
+            const len = models.length;
+            ret.slice(0, len).forEach((m) => {
+              m = m.default || m;
+              if (!Array.isArray(m)) {
+                m = [m];
+              }
+              
+              // 注册 model
+              m.map(_ => registerModel(app, _));
+            });
+            resolve(ret[len]);
+          }
+        });
+      });
+    },
+    ...config,
+  });
+}
+
+```
+
+因此，我们需要在 react-loadable 的基础上，增加 registerModel 功能，且需要自己维护 cached model 这个对象。
+
+为什么选择 react-loadable ?
+
+通过翻阅若干个支持SSR Code Splitting的Repo，只有 react-loadable 比较好的支持 "多个文件加载"。
+
+下面是react-loadable 的基本用法：
+```javascript
+
+Loadable({
+  loader: () => import('./components/Bar'),
+  loading: Loading,
+  timeout: 10000, // 10 seconds
+});
+
+```
+
+不难发现， 这是不能够完全匹配 dva/dynamic 的能力的。因为在Dva里，有model这个概念。
+我们不仅需要加载UI组件本身，还需要加载它所依赖的model文件。而react-loadable 可以很好的支持这个特性。
+
+下面是 react-loadable 的 Loadable.Map 用法
+
+```javascript
+Loadable.Map({
+  loader: {
+    Bar: () => import('./Bar'),
+    i18n: () => fetch('./i18n/bar.json').then(res => res.json()),
+  },
+  render(loaded, props) {
+    let Bar = loaded.Bar.default;
+    let i18n = loaded.i18n;
+    return <Bar {...props} i18n={i18n}/>;
+  },
+});
+```
+
+经过修改，我们可以得到兼容dva的dynamic方案。
+例如，有一个页面叫做 Grid。它依赖2个model，分别是 grid 和 user。
+
+```javascript
+
+ Loadable.Map({
+    loader: {
+      Grid: () => import('./routes/Grid.js'),
+      grid: () => import('./models/grid.js'),
+      user: () => import('./models/user.js'),
+    },
+    delay: 200,
+    timeout: 1000,
+    loading: Loading,
+    render(loaded, props) {
+      let Grid = loaded["Grid"].default;
+      let grid = loaded["grid"].default;
+      let user = loaded["grid"].default;
+      registerModel(app, grid);
+      registerModel(app, user);
+      return <Grid {...props} />;
+    },
+ });
+
+```
+
+对于复杂的项目，可能有很多route配置，写上面这个配置项代码较多。我们可以考虑对其进行封装。
+基于此，我们可以考虑实现 dynamicLoader 方法。
+
+```javascript
+
+const dynamicLoader = (app, modelNameList, componentName) => {
+  
+  let loader = {};
+  let models = [];
+  let fn = (path, prefix) => {
+    return () => import(`./${prefix}/${path}`);
+  };
+
+  if (modelNameList && modelNameList.length > 0) {
+    for (let i in modelNameList) {
+      if (modelNameList.hasOwnProperty(i)) {
+        let model = modelNameList[i];
+        if (loader[model] === undefined) {
+          loader[model] = fn(model, 'models');
+          models.push(model);
+        }
+      }
+    }
+  }
+
+  loader[componentName] = fn(componentName, 'routes');
+
+  return Loadable.Map({
+    loader: loader,
+    loading: Loading,
+    render(loaded, props) {
+      let C = loaded[componentName].default;
+
+      for (let i in models) {
+        if (models.hasOwnProperty(i)) {
+          let model = models[i];
+          if (loaded[model] && getApp()) {
+            registerModel(app, loaded[model]);
+          }
+        }
+      }
+      return <C {...props}/>;
+    },
+  });
+};
+
+
+// 使用
+
+const routes = [{
+      path: '/popular/:id',
+      component: dynamicLoader(app, ['grid'], 'Grid')
+}];
+
+```
+
+但是，上述代码在 SSR Server端是无法工作的。
+
+首先，react-loadable 需要在webpack打包过程中生成Loadable组件的数据字典。
+SSR Server 需要利用这个字典的信息生成 分片js代码的 script 标签。
+
+字典文件示例：
+
+```javascript
+// react-loadable.json
+
+{
+  "./routes/Grid.js": [
+    {
+      "id": 141,
+      "name": "./src/routes/Grid.js",
+      "file": "0.js",
+      "publicPath": "/public/0.js"
+    }
+  ],
+  "lodash/isArray": [
+    {
+      "id": 296,
+      "name": "./node_modules/lodash/isArray.js",
+      "file": "0.js",
+      "publicPath": "/public/0.js"
+    },
+    {
+      "id": 296,
+      "name": "./node_modules/lodash/isArray.js",
+      "file": "1.js",
+      "publicPath": "/public/1.js"
+    }
+  ]
+  //... 以下省略
+}
+
+```
+
+实际使用发现，上述代码 dynamicLoader 无法生成正确的字典。
+
+后经过Debug发现，问题根源是代码中使用了带参数的 import。即 <b>import(`./${prefix}/${path}`)</b>，
+而webpack 在构建过程中无法静态获取Loadable组件的路径。因此，不能使用带参数的 import。
+
+最终的方案是，定义路由配置文件 routes.json。然后编写一个路由生成器，生成需要的路由文件。
+
+示例的routes.json 文件如下：
+
+```javascript
+
+[
+  {
+    "path": "/",
+    "exact": true,
+    "dva_route": "./routes/Home.js",
+    "dva_models": []
+  },
+  {
+    "path": "/popular/:id",
+    "dva_route": "./routes/Grid.js",
+    "dva_models": [
+      "./models/grid.js"
+    ]
+  },
+  {
+    "path": "/topic",
+    "dva_route": "./routes/Topic.js",
+    "dva_models": []
+  }
+]
+
+
+```
+
+
