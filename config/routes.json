@@ -1,0 +1,20 @@
+[
+  {
+    "path": "/",
+    "exact": true,
+    "dva_route": "./routes/Home.js",
+    "dva_models": []
+  },
+  {
+    "path": "/popular/:id",
+    "dva_route": "./routes/Grid.js",
+    "dva_models": [
+      "./models/grid.js"
+    ]
+  },
+  {
+    "path": "/topic",
+    "dva_route": "./routes/Topic.js",
+    "dva_models": []
+  }
+]

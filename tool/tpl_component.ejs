@@ -1,0 +1,23 @@
+(app) => {
+  return Loadable.Map({
+  loader: {
+    <%= dva_route_name %>: () => import('<%= dva_route %>'),
+<% for(var i=0; i < dva_model_name_list.length; i++) { -%>
+    <%= dva_model_name_list[i] %>: () => import('<%= dva_models[i] %>'),
+<% } -%>
+  },
+  delay: 200,
+  timeout: 1000,
+  loading: Loading,
+  render(loaded, props) {
+    let <%= dva_route_name %> = loaded["<%= dva_route_name %>"].default;
+<% for(var i=0; i < dva_model_name_list.length; i++) { -%>
+    let <%= dva_model_name_list[i] %> = loaded["<%= dva_model_name_list[i] %>"].default;
+<% } -%>
+<% for(var i=0; i < dva_model_name_list.length; i++) {-%>
+    registerModel(app, <%= dva_model_name_list[i] %>);
+<% } -%>
+    return <<%= dva_route_name %> {...props} />;
+  },
+});
+}

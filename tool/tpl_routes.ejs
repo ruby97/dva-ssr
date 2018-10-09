@@ -1,0 +1,32 @@
+import React from 'react'
+import Loadable from 'react-loadable';
+import Loading from './Loading';
+import {registerModel} from "./register";
+
+let routes = [
+  <% for(var i=0; i<routes.length; i++) { -%>
+  <%= '{' %>
+    path: '<%= routes[i].path %>',
+  <% if (routes[i].exact) { %>
+    exact: true,
+  <% } %>
+    component: <%- routes[i].component %>
+  <%= '},' %>
+  <% } -%>
+];
+
+const getRoutes = (app) => {
+  return routes.map((route) => {
+    let componentName = route.component.name;
+    if (componentName !== 'Connect') {
+      try {
+        route.component = route.component(app);
+      } catch (e) {
+      }
+    }
+    return route;
+  });
+};
+
+export default getRoutes;
+
