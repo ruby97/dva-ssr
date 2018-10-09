@@ -12,8 +12,8 @@
 
 #### 功能
 
-- 支持Dva（即基于 react, react-router, redux, redux-saga 的状态管理）
-- 支持Code Splitting （不再使用Dva自带的 dva/dynamic加载组件）
+- 基于 Dva 的 SSR 解决方案
+- 支持 Code Splitting （不再使用Dva自带的 dva/dynamic加载组件）
 - 支持 CSS Modules
 
 #### SSR实现逻辑
@@ -23,6 +23,16 @@
 ![ssr overview](doc/dva_ssr.png)
 
 上图是SSR的运行时流程图（暂时不考虑构建的问题）
+
+图中左侧是浏览器端看到的页面源码。其中红色框标识的3个部分，是SSR需要关注的重点内容。
+
+- 最简单的是中间一个框，它是服务端渲染的App的内容部分。
+
+- 第一个是分片（splitting）代码文件。即SSR Server必须要知道，浏览器要正确展示这个页面，需要包含哪些分片的js代码。
+如果不计算并返回这个script标签，那么浏览器render这个list 组建时，会发现这个组件不存在，还需要异步加载并re-render 页面。
+
+- 最后一个框，是服务端返回的 window._preloadedState 即 全局状态对象。浏览器端要使用这个对象对redux的store进行初始化。
+
 
 收到客户端的SSR请求后，SSR Server将依次执行如下五部操作：
 
