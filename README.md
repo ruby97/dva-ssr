@@ -1,8 +1,8 @@
-## dva-ssr
+# dva-ssr
 
-### react服务端渲染demo (基于Dva)
+## react服务端渲染demo (基于Dva)
 
-#### 使用
+### 使用
 
 - npm install
 - npm run buildClient
@@ -10,15 +10,15 @@
 - npm run ssr
 - view localhost:3000
 
-#### 功能
+### 功能
 
 - 基于 Dva 的 SSR 解决方案
 - 支持 Code Splitting （不再使用Dva自带的 dva/dynamic加载组件）
 - 支持 CSS Modules
 
-#### SSR实现逻辑
+### SSR实现逻辑
 
-##### 概览
+#### 概览
 
 ![ssr overview](doc/dva_ssr.png)
 
@@ -104,7 +104,7 @@ let scriptMarkups = scripts.map(bundle => {
 
 > Loadable 的相关概念和用法，请参考 github: [react-loadable](https://github.com/jamiebuilds/react-loadable)
 
-##### Code Splitting
+#### Code Splitting
 
 
 4. 获取preloadedState
@@ -132,7 +132,16 @@ res.send(`
 `);
 ```
 
-##### 如何支持Dva
+#### 如何支持Dva
+
+本节分几个部分：
+
+1. 如何既支持 dva/dynamic 又支持 SSR
+2. SSR Server 端如何支持 Dva
+3. SSR Client 端如何支持 Dva
+
+
+##### 如何既支持 dva/dynamic 又支持 SSR
 
 之前使用dva的Code Splitting功能时，用的是 dva/dynamic。示例代码如下：
 
@@ -389,7 +398,130 @@ SSR Server 需要利用这个字典的信息生成 分片js代码的 script 标�
   }
 ]
 
+```
+
+到此，我们就完成了对于dva/dynamic 和 SSR 的支持。
+
+##### SSR Server 端如何支持 Dva
+
+1. app.start 
+
+默认情况下：
+```javascript
+app.start('#root');
+```
+
+server 端应该不加参数
+
+```javascript
+// 官方示例
+import { IntlProvider } from 'react-intl';
+...
+const App = app.start();
+ReactDOM.render(<IntlProvider><App /></IntlProvider>, htmlElement);
+
+// 本实现的示例
+
+const App = app.start();
+const markup = renderToString(
+    <Loadable.Capture report={module => modules.push(module)}>
+      <App location={req.path} context={{}}/>
+    </Loadable.Capture>
+  );
+```
+
+2. model register
+
+```javascript
+
+const matchedComponents = matchRoutes(routes, req.path).map(({route}) => {
+    if (!route.component.preload) {
+      return route.component;
+    } else {
+      
+      // 加载Loadable组件
+      return route.component.preload().then(res => {
+        if (res.default) {
+          // Loadable 组件
+          return res.default;
+        } else {
+          // Loadable.Map 组件
+          let result;
+          for (let i in res) {
+            if (res.hasOwnProperty(i)) {
+              if (res[i].default.hasOwnProperty('namespace')) {
+                // model 组件
+                registerModel(app, res[i]);
+              } else {
+                // route 组件
+                result = res[i].default;
+              }
+            }
+          }
+          return result;
+        }
+      })
+    }
+  });
+
 
 ```
 
+3. 调用组件初始化方法fetching时，需要传入 dispatch。而全局的dispatch对象在 app._store 里
 
+```javascript
+
+const actionsList = loadedComponents.map(component => {
+    if (component.fetching) {
+      return component.fetching({
+        ...app._store,
+        ...component.props,
+        path: req.path
+      });
+    } else {
+      return null;
+    }
+  });
+
+// 示例 fetching 方法
+
+static fetching({dispatch, path}) {
+    let language = path.substr("/popular/".length);
+    return [
+      dispatch({type: 'grid/init', payload: {language}}),
+    ];
+}
+
+```
+
+##### 客户端如何支持 Dva
+
+1. render
+
+```javascript
+
+Loadable.preloadReady().then(() => {
+  const App = app.start();
+  hydrate(
+    <App/>,
+    document.getElementById('app')
+  );
+});
+
+```
+
+2. 组件的初始化数据方法 fetching 
+
+由于一个route 可能需要依赖多个model作为数据源。故返回一个dispatch 的数组。这样server就可以通过多个接口拿数据。
+
+```javascript
+
+static fetching({dispatch, path, params}) {
+    let language = path.substr("/popular/".length);
+    return [
+      dispatch({type: 'grid/init', payload: {language}}),
+      dispatch({type: 'user/fetch', payload: {userId: params.userId}})
+    ];
+}
+
+```
