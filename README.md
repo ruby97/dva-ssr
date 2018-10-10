@@ -525,3 +525,31 @@ static fetching({dispatch, path, params}) {
 }
 
 ```
+
+### SSR webpack 相关配置
+
+#### 支持 react-loadable
+
+webpack对client代码打包时，需要生成Loadable的组件字典。这需要使用其提供的webpack plugin。
+
+配置在webpack.config.client.js 中
+
+```javascript
+plugins: [
+    new ReactLoadablePlugin({
+      filename: path.resolve(__dirname, 'dist', 'react-loadable.json'),
+    }),
+  ]
+```
+
+#### 支持 css-modules
+
+由于server 端在渲染时要获取到 一个dom节点经过css-modules转换后的classname。
+
+为实现这个功能需要借助 一个 babel-plugin
+
+具体用法参考：[babel-plugin-css-modules-transform](https://www.npmjs.com/package/babel-plugin-css-modules-transform)
+
+#### 其他配置
+
+大多是为了解决构建过程中报的语法错误
