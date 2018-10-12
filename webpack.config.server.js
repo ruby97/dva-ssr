@@ -60,7 +60,9 @@ let serverConfig = {
       allChunks: true,
     }),
     new webpack.DefinePlugin({
-      __isBrowser__: "false"
+      __isBrowser__: "false",
+      __PROJECT_DIR__: JSON.stringify(__dirname),
+      __ASSETS_DIR__: JSON.stringify(path.join(__dirname, 'dist'))
     }),
   ]
 };

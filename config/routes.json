@@ -16,5 +16,20 @@
     "path": "/topic",
     "dva_route": "./routes/Topic.js",
     "dva_models": []
+  },
+  {
+    "path": "/login",
+    "dva_route": "./routes/Login.js",
+    "dva_models": [
+      "./models/user.js"
+    ]
+  },
+  {
+    "path": "/admin",
+    "auth": true,
+    "dva_route": "./routes/Admin.js",
+    "dva_models": [
+      "./models/user.js"
+    ]
   }
 ]

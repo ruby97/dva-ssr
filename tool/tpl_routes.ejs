@@ -10,6 +10,9 @@ let routes = [
   <% if (routes[i].exact) { %>
     exact: true,
   <% } %>
+  <% if (routes[i].auth) { %>
+    auth: true,
+  <% } %>
     component: <%- routes[i].component %>
   <%= '},' %>
   <% } -%>

@@ -9,7 +9,9 @@
     "buildServer": "BABEL_ENV=server  webpack --config webpack.config.server.js",
     "ssr": "nodemon dist/server.js",
     "format": "prettier-eslint \"src/**/*.js\"",
-    "route": "node tool/generator.js && prettier-eslint \"src/routes.js\""
+    "route": "node tool/generator.js && prettier-eslint \"src/routes.js\"",
+    "dev": "npm run route && npm run buildClient && npm run buildServer && npm run ssr",
+    "devssr": "npm run buildServer && npm run ssr"
   },
   "babel": {
     "presets": [
@@ -26,16 +28,20 @@
     "classnames": "^2.2.6",
     "cors": "^2.8.4",
     "dva": "^2.4.0",
-    "express": "^4.16.2",
+    "hapi": "^17.6.0",
     "history": "latest",
+    "inert": "^5.1.0",
     "isomorphic-fetch": "^2.2.1",
+    "js-cookie": "^2.2.0",
     "prop-types": "latest",
     "react": "^16.2.0",
     "react-css-modules": "^4.7.7",
     "react-dom": "^16.2.0",
     "react-loadable": "^5.5.0",
     "react-router-config": "^4.4.0-beta.1",
-    "react-router-dom": "latest"
+    "react-router-dom": "latest",
+    "react-router-redux": "^4.0.8",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
