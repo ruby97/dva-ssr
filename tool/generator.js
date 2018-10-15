@@ -16,6 +16,13 @@ try {
   console.log("parse routes.json file failed");
 }
 
+function titleCase(str) {
+  var array = str.toLowerCase().split(" ");
+  for (var i = 0; i < array.length; i++){
+    array[i] = array[i][0].toUpperCase() + array[i].substring(1, array[i].length);
+  }
+  return array.join(" ");
+}
 
 function getFilenameWithoutExtension(str, separator = "/") {
   var slices = str.split(separator);
@@ -34,10 +41,10 @@ function validateRouteConfig(route) {
 
   try {
     var routeClassName = getFilenameWithoutExtension(route.dva_route);
-    var firstCharacter = routeClassName.charCodeAt(0);
-    if ((firstCharacter - "A".charCodeAt(0) < 0 || firstCharacter - "Z".charCodeAt(0) > 0)) {
-      return false;
-    }
+    // var firstCharacter = routeClassName.charCodeAt(0);
+    // if ((firstCharacter - "A".charCodeAt(0) < 0 || firstCharacter - "Z".charCodeAt(0) > 0)) {
+    //   return false;
+    // }
 
     var dict = {};
     var valid = true;
@@ -61,7 +68,7 @@ function validateRouteConfig(route) {
 
 
 function fillRouteConfig(route) {
-  route.dva_route_name = getFilenameWithoutExtension(route.dva_route);
+  route.dva_route_name = titleCase(getFilenameWithoutExtension(route.dva_route));
   route.dva_model_name_list = [];
   for (var i = 0; i < route.dva_models.length; i++) {
     if (route.dva_models.hasOwnProperty(i)) {

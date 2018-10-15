@@ -37,6 +37,8 @@ class ReactController {
 
         const matchedRoutes = matchRoutes(routes, request.path).map(({route}) => route);
 
+        console.log(matchedRoutes);
+
         if (!Array.isArray(matchedRoutes) || matchedRoutes.length === 0) {
           return h.redirect('/');
         }

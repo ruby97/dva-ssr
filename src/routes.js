@@ -117,6 +117,26 @@ let routes = [
 }
 
   },
+    {
+    path: '/live',
+  
+  
+    component: (app) => {
+  return Loadable.Map({
+  loader: {
+    Index: () => import('./routes/Live/index.js'),
+  },
+  delay: 200,
+  timeout: 1000,
+  loading: Loading,
+  render(loaded, props) {
+    let Index = loaded["Index"].default;
+    return <Index {...props} />;
+  },
+});
+}
+
+  },
   ];
 
 const getRoutes = (app) => {

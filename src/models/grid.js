@@ -1,4 +1,4 @@
-import {getPopularList} from "../services/grid";
+import {getPopularList} from "services/grid";
 
 export default {
   namespace: 'grid',

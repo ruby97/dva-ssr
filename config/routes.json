@@ -31,5 +31,11 @@
     "dva_models": [
       "./models/user.js"
     ]
+  },
+  {
+    "path": "/live",
+    "dva_route": "./routes/Live/index.js",
+    "dva_models": [
+    ]
   }
 ]

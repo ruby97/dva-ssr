@@ -12,6 +12,12 @@ let serverConfig = {
     filename: 'server.js',
     publicPath: '/public/'
   },
+  resolve: {
+    extensions: ['.js', '.jsx', '.json'],
+    alias: {
+      services: `${__dirname}/src/services`,
+    }
+  },
   module: {
     rules: [
       {test: /\.(js)$/, use: 'babel-loader'},
@@ -44,6 +50,24 @@ let serverConfig = {
                 modules: true,
                 localIdentName: '[name]__[local]___[hash:base64:5]'
               }
+            }
+          ]
+        })
+      },
+      {
+        test: /\.less$/,
+        use: ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: [
+            {
+              loader: 'css-loader',
+              query: {
+                modules: true,
+                localIdentName: '[name]__[local]___[hash:base64:5]'
+              }
+            },
+            {
+              loader: 'less-loader'
             }
           ]
         })
