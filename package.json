@@ -37,6 +37,7 @@
     "prop-types": "latest",
     "react": "^16.2.0",
     "react-css-modules": "^4.7.7",
+    "react-document-title": "^2.0.3",
     "react-dom": "^16.2.0",
     "react-loadable": "^5.5.0",
     "react-router-config": "^4.4.0-beta.1",
@@ -47,8 +48,8 @@
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
-    "babel-plugin-dva-hmr": "^0.3.2",
     "babel-plugin-css-modules-transform": "^1.6.1",
+    "babel-plugin-dva-hmr": "^0.3.2",
     "babel-plugin-dynamic-import-node": "^1.1.0",
     "babel-plugin-module-resolver": "^2.7.1",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
@@ -66,7 +67,9 @@
     "eslint-plugin-import": "^2.6.0",
     "eslint-plugin-jsx-a11y": "^5.1.1",
     "eslint-plugin-react": "^7.1.0",
+    "extract-text-webpack-plugin": "^3.0.2",
     "file-loader": "^2.0.0",
+    "html-webpack-plugin": "^3.2.0",
     "husky": "^0.12.0",
     "node-sass": "^4.9.3",
     "nodemon": "^1.12.5",
@@ -77,7 +80,6 @@
     "style-loader": "^0.23.0",
     "url-loader": "^1.1.1",
     "webpack": "^3.10.0",
-    "webpack-node-externals": "^1.6.0",
-    "extract-text-webpack-plugin": "^3.0.2"
+    "webpack-node-externals": "^1.6.0"
   }
 }

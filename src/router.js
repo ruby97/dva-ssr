@@ -1,9 +1,10 @@
 import React from 'react';
-import {Router, Route, Switch, Redirect} from 'dva/router';
+import {Router, Route, Switch, Redirect, routerRedux} from 'dva/router';
 import Navbar from "./routes/Navbar";
 import routes from "./routes";
 import NoMatch from "./routes/NoMatch";
 import cookie from 'js-cookie';
+const { ConnectedRouter } = routerRedux;
 
 const PrivateRoute = ({component: C, ...rest}) => (
   <Route {...rest} render={(props) => (
@@ -21,7 +22,7 @@ function RouterConfig({history, app}) {
   const routeList = routes(app);
 
   return (
-    <Router history={history}>
+    <ConnectedRouter history={history}>
       <div>
         <Navbar/>
         <Switch>
@@ -50,7 +51,7 @@ function RouterConfig({history, app}) {
           <Route render={(props) => <NoMatch {...props} />}/>
         </Switch>
       </div>
-    </Router>
+    </ConnectedRouter>
   );
 }
 

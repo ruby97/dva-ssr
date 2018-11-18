@@ -2,6 +2,7 @@ const path = require('path');
 const {ReactLoadablePlugin} = require('react-loadable/webpack');
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 let browserConfig = {
   entry: {
@@ -125,6 +126,11 @@ let browserConfig = {
     new ReactLoadablePlugin({
       filename: path.resolve(__dirname, 'dist', 'react-loadable.json'),
     }),
+    new HtmlWebpackPlugin({
+      title: 'DVA SSR',
+      template: path.resolve(__dirname, 'public' , 'index.ejs'),
+      filename: 'index.html'
+    })
   ]
 };
 
