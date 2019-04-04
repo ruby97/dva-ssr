@@ -1,5 +1,5 @@
 import React from 'react'
-import {NavLink, Link} from 'react-router-dom'
+import { NavLink, Link } from 'dva/router'
 
 export default function Navbar() {
   const languages = [{

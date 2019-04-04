@@ -1,13 +1,13 @@
-import {renderToString} from 'react-dom/server';
+import { renderToString } from 'react-dom/server';
 import * as React from 'react';
 import dva from 'dva';
-import {matchRoutes} from 'react-router-config';
+import { matchRoutes } from 'react-router-config';
 import Loadable from 'react-loadable';
-import {getBundles} from 'react-loadable/webpack'
-import {createMemoryHistory} from 'history';
+import { getBundles } from 'react-loadable/webpack'
+import { createMemoryHistory } from 'history';
 import router from "../../router";
 import getRoutes from "../../routes";
-import {clearModel, registerModel} from "../../register";
+import { clearModel, registerModel } from "../../register";
 
 const moduleDict = require('../../../dist/react-loadable.json');
 
@@ -30,12 +30,12 @@ class ReactController {
         history.push(request.path);
         const initialState = {};
 
-        const app = dva({history, initialState});
+        const app = dva({ history, initialState });
         app.router(router);
         const App = app.start();
         let routes = getRoutes(app);
 
-        const matchedRoutes = matchRoutes(routes, request.path).map(({route}) => route);
+        const matchedRoutes = matchRoutes(routes, request.path).map(({ route }) => route);
 
         console.log(matchedRoutes);
 
@@ -47,7 +47,7 @@ class ReactController {
           return route.auth === true;
         }).length;
 
-        if(needLogin && !ReactController.checkLogin(request.state)) {
+        if (needLogin && !ReactController.checkLogin(request.state)) {
           return h.redirect('/login');
         }
 
@@ -106,7 +106,7 @@ class ReactController {
         const modules = [];
         const markup = renderToString(
           <Loadable.Capture report={module => modules.push(module)}>
-            <App location={request.path} context={{}}/>
+            <App location={request.path} context={{}} />
           </Loadable.Capture>
         );
 
@@ -124,22 +124,20 @@ class ReactController {
         clearModel();
 
         // Step9: 服务端返回渲染内容
-        return (`
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <title>React Server Side Demo With Dva</title>
-                <link href="/public/style.css" rel="stylesheet">
-              </head>
+        return (`<!DOCTYPE html>
+<html>
+  <head>
+    <title>React Server Side Demo With Dva</title>
+    <link href="/public/style.css" rel="stylesheet">
+  </head>
 
-              <body>
-                <div id="app">${markup}</div>
-                <script>window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(/</g, '\\\u003c')}</script>
-                <script src="/public/main.js"></script>
-                ${scriptMarkups}
-              </body>
-            </html>
-        `);
+  <body>
+    <div id="app">${markup}</div>
+    <script>window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(/</g, '\\\u003c')}</script>
+    <script src="/public/main.js"></script>
+    ${scriptMarkups}
+  </body>
+</html>`);
       },
     });
   }

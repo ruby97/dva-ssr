@@ -1,5 +1,5 @@
 import dva from 'dva';
-import {render} from 'react-dom';
+import {hydrate} from 'react-dom';
 import Loadable from 'react-loadable';
 import './index.css';
 import React from "react";
@@ -17,7 +17,7 @@ app.router(require('../router').default);
 
 Loadable.preloadReady().then(() => {
   const App = app.start();
-  render(
+  hydrate(
     <App/>,
     document.getElementById('app')
   );

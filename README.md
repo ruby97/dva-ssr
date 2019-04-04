@@ -29,7 +29,7 @@
 - 最简单的是中间一个框，它是服务端渲染的App的内容部分。
 
 - 第一个是分片（splitting）代码文件。即SSR Server必须要知道，浏览器要正确展示这个页面，需要包含哪些分片的js代码。
-如果不计算并返回这个script标签，那么浏览器render这个list 组建时，会发现这个组件不存在，还需要异步加载并re-render 页面。
+如果不计算并返回这个script标签，那么浏览器render这个list 组件时，会发现这个组件不存在，还需要异步加载并re-render 页面。
 
 - 最后一个框，是服务端返回的 window._preloadedState 即 全局状态对象。浏览器端要使用这个对象对redux的store进行初始化。
 
